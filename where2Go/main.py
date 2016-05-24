@@ -47,7 +47,7 @@ def reduce_possibilities(category):
     return landmarks
 
 
-def main():
+if __name__ == "__main__":
     print('''Enter 1-4:
     1: Waterfalls
     2: Lakes
@@ -62,7 +62,3 @@ def main():
         else:
             print("Invalid choice. Please enter a number between 1 and 4.")
             continue
-
-
-if __name__ == "__main__":
-    main()
