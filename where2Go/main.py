@@ -1,64 +1,111 @@
-import csv
 import forecast
 import googlish
+import sqlite3
+import requests
 from landmark import Landmark
+import datetime
 
-CATEGORIES = {
-    '1': 'waterfalls.csv',
-    '2': 'lakes.csv',
-    '3': 'trails.csv',
-    '4': 'peaks.csv'
+CATEGORIES_DB_NAMES = {
+    '1': 'waterfalls',
+    '2': 'lakes',
+    '3': 'trails',
+    '4': 'peaks'
 }
 
+CATEGORIES = {
+    '1': 'водопади',
+    '2': 'езера',
+    '3': 'екопътеки',
+    '4': 'върхове'
+}
 
-# reads the information about the landmarks from the chosen category
-# returns a list of landmarks
-def read_from_csv(category):
+WEATHER_API_ID = 'ad5d3d8d3760a601675b4a38170c6f6a'
+
+
+def read_and_fill(category):
+    """
+    Reads the information about the landmarks from the chosen category.
+    Return a list of landmarks.
+    """
     landmarks = []
-    with open(CATEGORIES[category]) as category_file:
-        reader = csv.reader(category_file, delimiter=',')
-        for row in reader:
-            landmarks.append(Landmark(row[0], row[1], tuple(row[2], row[3])))
+
+    db_con = sqlite3.connect('landmarks.db')
+    db = db_con.cursor()
+
+    for row in db.execute('SELECT * FROM {}'.format(category)):
+        # row[1] and row[2] - coordinates of the landmark
+        forecast_data = get_forecast_info(row[1], row[2])
+
+        if forecast_data['list'][1]['weather'][0]['main'] == 'Clear' or\
+                forecast_data['list'][1]['weather'][0]['main'] == 'Clouds':
+            landmarks.append(Landmark(row[0], row[1], row[2]))
+
+            # was forecast_data['list'][1]['clouds']['all'] before
+            # forecast_data['list'][1]['temp']['day']['main']
+            landmarks[-1].set_forecast_data(
+                forecast_data['list'][1]['clouds'],
+                forecast_data['list'][1]['temp']['day'])
+            duration = googlish.directions_and_durations.get_duration(
+                row[1], row[2])
+            landmarks[-1].set_travel_duration(duration)
 
     return landmarks
 
 
-# uses the forecast module to extract the information about the wather
-# in the landmarks from the category
-def get_forecast_info(landmarks):
-    pass
+def get_forecast_info(lat, lon):
+    """
+    Sends http requests to the api for the exact location
+    and return the response in json.
+    """
+    response = requests.get(
+        "http://api.openweathermap.org/data/2.5/forecast/daily?lat={}&lon={}&cnt=2&units=metric&APPID={}".format(
+            lat, lon, WEATHER_API_ID))
+
+    forecast_data = response.json()
+    return forecast_data
 
 
-# gets the places in the category with nice weather and sorts
-# them from best to worst
-# returns a list of the reduced landmarks
-def reduce_possibilities(category):
-    landmarks = read_from_csv(category)
-    get_forecast_info(landmarks)
-
-    for site in landmarks:
-        if site.get_rain_percentage() > 15:
-            landmarks.remove(site)
-
-    for site in landmarks:
-        if site.get_cloud_percentage() > 50:
-            landmarks.remove(site)
+def sort_landmarks(landmarks):
+    """
+    First sort the landmarks by the cloud percentage expectaion.
+    After that sort them by temperature and after that by travel duration
+    from the current position.
+    """
+    landmarks.sort(
+        key=lambda landmark: landmark.get_cloud_percentage(), reverse=True)
+    landmarks.sort(
+        key=lambda landmark: landmark.get_average_temp(), reverse=True)
+    landmarks.sort(
+        key=lambda landmark: landmark.get_travel_duration())
 
     return landmarks
 
 
 if __name__ == "__main__":
-    print('''Enter 1-4:
-    1: Waterfalls
-    2: Lakes
-    3: Mountain trails
-    4: Peaks''')
+    print('''Моля, въведете цифра от 1 до 4:
+    1: Водопади
+    2: Езера
+    3: Екопътеки
+    4: Върхове''')
 
     while True:
         choice = input()
         if choice == '1' or choice == '2' or choice == '3' or choice == '4':
-            print("You have chosen \"{}\"".format(CATEGORIES[choice]))
+            print("Вие избрахте: {}".format(CATEGORIES[choice]))
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 4.")
+            print("Невалиден избор. Моля, въведете цифра между 1 и 4.")
             continue
+
+    landmarks = read_and_fill(CATEGORIES_DB_NAMES[choice])
+    if len(landmarks) != 0:
+        landmarks_sorted = sort_landmarks(landmarks)
+        for landmark in landmarks_sorted:
+            print(
+                landmark.get_name() + " - " +
+                str(landmark.get_average_temp()) + " - " +
+                str(landmark.get_cloud_percentage()) + " - " +
+                str(datetime.timedelta(
+                    seconds=landmark.get_travel_duration())))
+    else:
+        print("Няма места с хубаво време от избраната категория :(")

@@ -1,36 +1,35 @@
 class Landmark:
     __name = None
-    __closest_town = None
-    __coordinates = None
+    __lat = 0
+    __lon = 0
+    __travel_duration = 0
 
-    __rain_percentage = 0
     __cloud_percentage = 0
-    __max_temp = 0
+    __average_temp = 0
 
-    def __init__(self, name, closest_town, coordinates):
+    def __init__(self, name, lat, lon):
         self.__name = name
-        self.__closest_town = closest_town
-        self.__coordinates = tuple(coordinates)
+        self.__lat = lat
+        self.__lon = lon
 
-    def set_forecast_data(self, rain, cloud, max):
-        self.__rain_percentage = rain
+    def set_forecast_data(self, cloud, average):
         self.__cloud_percentage = cloud
-        self.__max_temp = max
+        self.__average_temp = average
+
+    def set_travel_duration(self, duration):
+        self.__travel_duration = duration
+
+    def get_travel_duration(self):
+        return self.__travel_duration
 
     def get_name(self):
         return self.__name
 
-    def get_closest_town(self):
-        return self.__closest_town
-
     def get_coordinates(self):
-        return self.__coordinates
-
-    def get_rain_percentage(self):
-        return self.__rain_percentage
+        return (self.__lat, self.__lon)
 
     def get_cloud_percentage(self):
         return self.__cloud_percentage
 
-    def get_max_temp(self):
-        return self.__max_temp
+    def get_average_temp(self):
+        return self.__average_temp
