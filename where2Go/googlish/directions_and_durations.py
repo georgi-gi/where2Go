@@ -18,7 +18,7 @@ def get_current_coordinates():
     return (data['lat'], data['lon'])
 
 
-def tranform_html_directions(data):
+def transform_html_directions(data):
     arr_instr = []
     # transform to text or put into json
     for leg in data['routes'][0]['legs']:
@@ -27,7 +27,9 @@ def tranform_html_directions(data):
 
     instructions = "\n".join(arr_instr)
 
-    return instructions
+    without_html = BeautifulSoup(instructions, 'html.parser')
+
+    return without_html.get_text()
 
 
 def get_duration(destination_lat, destination_lon):
@@ -92,15 +94,13 @@ def directions(destination_lat, destination_lon, address):
 
     data = response.json()
 
-    instructions = tranform_html_directions(data)
-
-    remove_html = BeautifulSoup(instructions, 'html.parser')
+    instructions = transform_html_directions(data)
 
     text_filename = "{}/{}_text.txt".format(
         expanduser("~"), str(datetime.now()).replace(":", "-"))
 
     with open(text_filename, 'w') as text_file:
-        text_file.write(remove_html.get_text())
+        text_file.write(instructions)
 
     filename = "{}/{}.json".format(
         expanduser("~"), str(datetime.now()).replace(":", "-"))
