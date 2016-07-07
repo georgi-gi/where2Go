@@ -13,9 +13,14 @@ def get_current_coordinates():
     Returns the current latitude and longitude
     defined by IP address
     """
-    response = requests.get("http://ip-api.com/json")
-    data = response.json()
-    return (data['lat'], data['lon'])
+    try:
+        response = requests.get("http://ip-api.com/json")
+        data = response.json()
+        coordinates = (data['lat'], data['lon'])
+    except requests.ConnectionError:
+        print("Проблем с интернет връзката.")
+        coordinates = (0, 0)
+    return coordinates
 
 
 def transform_html_directions(data):
@@ -46,8 +51,12 @@ def get_duration(destination_lat, destination_lon):
         current_position[0], current_position[1],
         destination_lat, destination_lon, GOOGLE_API_KEY)
 
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url)
+        data = response.json()
+    except requests.ConnectionError:
+        print("Проблем с интернет връзката.")
+        return math.inf
 
     if data['status'] == 'OK':
         return data['routes'][0]['legs'][0]['duration']['value']
@@ -64,8 +73,12 @@ def get_duration_from_address(address, destination_lat, destination_lon):
            "json?origin={}&destination={},{}&key={}&"
            "language=bg&traffic_model").format(
         address, destination_lat, destination_lon, GOOGLE_API_KEY)
+    try:
+        response = requests.get(url)
+    except requests.ConnectionError:
+        print("Проблем с интернет връзката.")
+        return math.inf
 
-    response = requests.get(url)
     data = response.json()
     if data['status'] == 'OK':
         return data['routes'][0]['legs'][0]['duration']['value']
@@ -75,22 +88,27 @@ def get_duration_from_address(address, destination_lat, destination_lon):
 def directions(destination_lat, destination_lon, address):
     if address is None:
         current_position = get_current_coordinates()
-
         url = ("https://maps.googleapis.com/maps/api/directions/"
                "json?origin={},{}&destination={},{}&key={}&"
                "language=bg".format(current_position[0],
                                     current_position[1], destination_lat,
                                     destination_lon, GOOGLE_API_KEY))
-
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except requests.ConnectionError:
+            print("Проблем с интернет връзката")
+            return
 
     else:
         url = ("https://maps.googleapis.com/maps/api/directions/"
                "json?origin={}&destination={},{}&key={}&"
                "language=bg".format(address, destination_lat,
                                     destination_lon, GOOGLE_API_KEY))
-
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except requests.ConnectionError:
+            print("Проблем с интернет връзката.")
+            return
 
     data = response.json()
 

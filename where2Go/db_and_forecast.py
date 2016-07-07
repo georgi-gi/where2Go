@@ -21,6 +21,9 @@ def read_and_fill(category, address, days):
         # row[1] and row[2] - coordinates of the landmark
         forecast_data = get_forecast_info(row[1], row[2], days)
 
+        if forecast_data is None:
+            return []
+
         if forecast_data['list'][days - 1]['weather'][0]['main'] == 'Clear' or\
                 forecast_data['list'][days - 1]['weather'][0]['main'] == \
                 'Clouds':
@@ -51,9 +54,13 @@ def get_forecast_info(lat, lon, days):
            "2.5/forecast/daily?lat={}&lon={}&cnt={}"
            "&units=metric&APPID={}").format(lat, lon, days, WEATHER_API_ID)
     print("Waiting for a response...")
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
+        forecast_data = response.json()
+    except requests.ConnectionError:
+        print("Проблем с интернет връзката.")
+        forecast_data = None
 
-    forecast_data = response.json()
     return forecast_data
 
 
