@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('README.md') as description:
     long_description = description.read()
@@ -11,7 +11,7 @@ setup(
     description="Your weekend-adventure assistant",
     license="GNU GPL v2",
     keywords=["weekend", "walk", "adventure", "mountain", "nature"],
-    packages="where2Go",
+    packages=['where2Go'],
     long_description=long_description,
     classifiers=[
         "Development Status :: 1 - Planning",
