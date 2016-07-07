@@ -1,5 +1,5 @@
 from landmark import Landmark
-import googlish
+from directions_and_durations import get_duration, get_duration_from_address
 import sqlite3
 import requests
 
@@ -33,13 +33,10 @@ def read_and_fill(category, address, days):
                 forecast_data['list'][days - 1]['temp']['day'])
 
             if address is None:
-                duration =\
-                    googlish.directions_and_durations.get_duration(
-                        row[1], row[2])
+                duration = get_duration(row[1], row[2])
                 landmarks[-1].set_travel_duration(duration)
             else:
-                duration = googlish.directions_and_durations.\
-                    get_duration_from_address(address, row[1], row[2])
+                duration = get_duration_from_address(address, row[1], row[2])
                 landmarks[-1].set_travel_duration(duration)
 
     return landmarks
