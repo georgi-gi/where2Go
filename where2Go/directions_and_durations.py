@@ -29,6 +29,8 @@ def transform_html_directions(data):
     for leg in data['routes'][0]['legs']:
         for step in leg['steps']:
             arr_instr.append(step['html_instructions'])
+            arr_instr.append(step['duration']['text'])
+            arr_instr.append(step['distance']['text'])
 
     instructions = "\n".join(arr_instr)
 
@@ -89,7 +91,7 @@ def directions(destination_lat, destination_lon, address):
     if address is None:
         current_position = get_current_coordinates()
         url = ("https://maps.googleapis.com/maps/api/directions/"
-               "json?origin={},{}&destination={},{}&key={}&"
+               "json?units=metric&origin={},{}&destination={},{}&key={}&"
                "language=bg".format(current_position[0],
                                     current_position[1], destination_lat,
                                     destination_lon, GOOGLE_API_KEY))
@@ -101,7 +103,7 @@ def directions(destination_lat, destination_lon, address):
 
     else:
         url = ("https://maps.googleapis.com/maps/api/directions/"
-               "json?origin={}&destination={},{}&key={}&"
+               "json?units=metric&origin={}&destination={},{}&key={}&"
                "language=bg".format(address, destination_lat,
                                     destination_lon, GOOGLE_API_KEY))
         try:
@@ -112,19 +114,25 @@ def directions(destination_lat, destination_lon, address):
 
     data = response.json()
 
-    instructions = transform_html_directions(data)
+    if data['status'] == 'OK':
+        instructions = transform_html_directions(data)
 
-    text_filename = "{}/{}_text.txt".format(
-        expanduser("~"), str(datetime.now()).replace(":", "-"))
+        text_filename = "{}/{}_text.txt".format(
+            expanduser("~"), str(datetime.now()).replace(":", "-"))
 
-    with open(text_filename, 'w') as text_file:
-        text_file.write(instructions)
+        with open(text_filename, 'w') as text_file:
+            text_file.write(instructions)
 
-    filename = "{}/{}.json".format(
-        expanduser("~"), str(datetime.now()).replace(":", "-"))
+        filename = "{}/{}.json".format(
+            expanduser("~"), str(datetime.now()).replace(":", "-"))
 
-    with open(filename, 'w') as json_file:
-        json.dump(data, json_file)
+        with open(filename, 'w') as json_file:
+            json.dump(data, json_file)
 
-    print(("В {} има записан json файл с инструкциите "
-           "и текстов в {}").format(filename, text_filename))
+        print(("В {} има записан json файл с инструкциите "
+               "и текстов в {}").format(filename, text_filename))
+        return
+
+    else:
+        print("Има проблем с инструкциите. Моля, опитайте отново.")
+        return
