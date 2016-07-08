@@ -14,7 +14,7 @@ def read_and_fill(category, address, days):
     """
     landmarks = []
 
-    db_con = sqlite3.connect('where2Go/landmarks.db')
+    db_con = sqlite3.connect('landmarks.db')
     db = db_con.cursor()
 
     for row in db.execute('SELECT * FROM {}'.format(category)):
