@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import sys
 from directions_and_durations import directions
 from db_and_forecast import read_and_fill, sort_landmarks
 
@@ -59,11 +60,12 @@ def enter_address():
 
 if __name__ == "__main__":
     while True:
-        print('''Моля, въведете цифра от 1 до 4:
+        print('''Моля, въведете цифра от 1 до 5:
         1: Водопади
         2: Езера
         3: Екопътеки
-        4: Върхове''')
+        4: Върхове
+        5: Изход''')
 
         while True:
             choice = input()
@@ -71,6 +73,8 @@ if __name__ == "__main__":
                     choice == '3' or choice == '4':
                 print("Вие избрахте: {}".format(CATEGORIES[choice]))
                 break
+            elif choice == '5':
+                sys.exit()
             else:
                 print("Невалиден избор. Моля, въведете цифра между 1 и 4.")
                 continue
